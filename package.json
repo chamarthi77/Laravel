@@ -1,0 +1,31 @@
+{
+    "$schema": "https://json.schemastore.org/package.json",
+    "private": true,
+    "type": "module",
+    "scripts": {
+        "build": "vite build",
+        "dev": "vite"
+    },
+    "devDependencies": {
+        "@tailwindcss/vite": "^4.0.0",
+        "axios": "^1.11.0",
+        "concurrently": "^9.0.1",
+        "laravel-vite-plugin": "^2.0.0",
+        "tailwindcss": "^4.0.0",
+        "vite": "^7.0.4"
+    },
+    "name": "spoton-backend",
+    "version": "1.0.0",
+    "description": "A minimal Laravel 12.x backend that: - Runs locally on **SQLite** for fast setup; uses **MySQL** in production. - Verifies users via **Firebase Authentication** and links them to app authZ. - Provides **Projects**, **Permissions**, **Users** tables and **super‑admin CRUD** APIs. - Exposes a demo health endpoint: `GET /api/alive`.",
+    "main": "getToken.js",
+    "directories": {
+        "test": "tests"
+    },
+    "keywords": [],
+    "author": "",
+    "license": "ISC",
+    "dependencies": {
+        "firebase": "^12.2.1",
+        "firebase-admin": "^13.5.0"
+    }
+}
