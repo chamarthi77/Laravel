@@ -13,6 +13,8 @@ protected $routeMiddleware = [
 
     // ✅ Firebase middleware alias
     'firebase.auth' => \App\Http\Middleware\VerifyFirebaseToken::class,
+    'firebase.auth' => \App\Http\Middleware\FirebaseAuthMiddleware::class,
+
 
     // Other custom middleware
     'role'            => \App\Http\Middleware\EnsureRole::class,

@@ -9,21 +9,25 @@ class DatabaseSeeder extends Seeder
 {
     public function run()
     {
-        $this->call(PermissionsSeeder::class);
-        $this->call(RoleSeeder::class);
+        // ✅ Existing core seeders
+        $this->call([
+            PermissionsSeeder::class,
+            RoleSeeder::class,
+            ProjectSeeder::class, // 👈 our new one
+            IncidentSeeder::class,
+        ]);
 
         if (config('app.env') !== 'production') {
             // ✅ Ensure Demo Project exists (idempotent)
             DB::table('projects')->updateOrInsert(
-                ['name' => 'Demo Project'], // unique constraint
+                ['projectid' => '999'],
                 [
-                    'code'        => 'DEMO',
-                    'description' => 'Demo project for local testing',
+                    'name'        => 'Demo Project',
+                    'permission'  => 'read',
                     'created_at'  => now(),
                     'updated_at'  => now(),
                 ]
             );
-
 
             // ✅ Ensure Super Admin exists (idempotent)
             DB::table('users')->updateOrInsert(
