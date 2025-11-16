@@ -15,6 +15,8 @@ class DatabaseSeeder extends Seeder
             RoleSeeder::class,
             ProjectSeeder::class, // 👈 our new one
             IncidentSeeder::class,
+                    UserSeeder::class, // ✅ add this line
+
         ]);
 
         if (config('app.env') !== 'production') {
