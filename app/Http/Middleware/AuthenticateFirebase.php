@@ -42,9 +42,16 @@ class AuthenticateFirebase
             if (!$uid || !$email) {
                 return response()->json(['ok' => false, 'error' => 'invalid_claims'], 401);
             }
-            if (!$emailVerified) {
-                return response()->json(['ok' => false, 'error' => 'email_not_verified'], 403);
-            }
+           // Firebase says not verified → reject
+if (!$emailVerified) {
+    return response()->json(['ok' => false, 'error' => 'email_not_verified'], 403);
+}
+
+// Backend record still not updated → reject
+if (isset($user) && !$user->email_verified) {
+    return response()->json(['ok' => false, 'error' => 'email_not_verified'], 403);
+}
+
 $user = User::firstOrCreate(
     ['firebase_uid' => $uid],
     [
