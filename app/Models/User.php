@@ -18,6 +18,9 @@ class User extends Authenticatable
     'project_id',
     'permission_id',
     'is_super',
+    'latitude',
+    'longitude',
+    'address',
     ];
 
     // 🔑 Define many-to-many relationship with permissions
