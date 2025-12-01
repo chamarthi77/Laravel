@@ -11,207 +11,68 @@ class IncidentSeeder extends Seeder
     {
         $now = now();
 
-        // ---------------------------
-        // 📍 Chicago Base Coordinates
-        // ---------------------------
-        $baseLat = 41.8781;
-        $baseLng = -87.6298;
-
-        // Generate small random variation around Chicago
-        $randomOffset = function ($range = 0.08) {
-            return (rand(-1000, 1000) / 1000) * $range;
-        };
-
-        // ---------------------------------------------------
-        // Insert first 14 sample incidents (Project 1–4)
-        // ---------------------------------------------------
-        DB::table('incidents')->insert([
-            // 🔹 Project 1
-            [
-                'title' => 'Fire near North Zone',
-                'description' => 'Warehouse fire, moderate intensity',
-                'project_id' => 1,
-                'latitude' => $baseLat + $randomOffset(),
-                'longitude' => $baseLng + $randomOffset(),
-                'created_at' => $now,
-                'updated_at' => $now
-            ],
-            [
-                'title' => 'Gas Leak Reported',
-                'description' => 'Leak detected in industrial area',
-                'project_id' => 1,
-                'latitude' => $baseLat + $randomOffset(),
-                'longitude' => $baseLng + $randomOffset(),
-                'created_at' => $now,
-                'updated_at' => $now
-            ],
-            [
-                'title' => 'Power Outage',
-                'description' => 'Several units affected by blackout',
-                'project_id' => 1,
-                'latitude' => $baseLat + $randomOffset(),
-                'longitude' => $baseLng + $randomOffset(),
-                'created_at' => $now,
-                'updated_at' => $now
-            ],
-            [
-                'title' => 'Minor Explosion',
-                'description' => 'Small explosion at north substation',
-                'project_id' => 1,
-                'latitude' => $baseLat + $randomOffset(),
-                'longitude' => $baseLng + $randomOffset(),
-                'created_at' => $now,
-                'updated_at' => $now
-            ],
-
-            // 🔹 Project 2
-            [
-                'title' => 'Flood Warning Issued',
-                'description' => 'Riverside flooding alert issued for lowlands',
-                'project_id' => 2,
-                'latitude' => $baseLat + $randomOffset(),
-                'longitude' => $baseLng + $randomOffset(),
-                'created_at' => $now,
-                'updated_at' => $now
-            ],
-            [
-                'title' => 'Bridge Under Watch',
-                'description' => 'Structural monitoring ongoing due to rising water',
-                'project_id' => 2,
-                'latitude' => $baseLat + $randomOffset(),
-                'longitude' => $baseLng + $randomOffset(),
-                'created_at' => $now,
-                'updated_at' => $now
-            ],
-            [
-                'title' => 'Evacuation Advisory',
-                'description' => 'Residents advised to move to higher ground',
-                'project_id' => 2,
-                'latitude' => $baseLat + $randomOffset(),
-                'longitude' => $baseLng + $randomOffset(),
-                'created_at' => $now,
-                'updated_at' => $now
-            ],
-
-            // 🔹 Project 3
-            [
-                'title' => 'Earthquake Aftershock',
-                'description' => 'Minor aftershock detected 10km east',
-                'project_id' => 3,
-                'latitude' => $baseLat + $randomOffset(),
-                'longitude' => $baseLng + $randomOffset(),
-                'created_at' => $now,
-                'updated_at' => $now
-            ],
-            [
-                'title' => 'Tremor Felt Downtown',
-                'description' => 'Light vibration felt, no structural damage',
-                'project_id' => 3,
-                'latitude' => $baseLat + $randomOffset(),
-                'longitude' => $baseLng + $randomOffset(),
-                'created_at' => $now,
-                'updated_at' => $now
-            ],
-            [
-                'title' => 'Inspection Teams Deployed',
-                'description' => 'Crews dispatched for safety checks',
-                'project_id' => 3,
-                'latitude' => $baseLat + $randomOffset(),
-                'longitude' => $baseLng + $randomOffset(),
-                'created_at' => $now,
-                'updated_at' => $now
-            ],
-            [
-                'title' => 'Ground Stabilization',
-                'description' => 'Work ongoing to reinforce affected zones',
-                'project_id' => 3,
-                'latitude' => $baseLat + $randomOffset(),
-                'longitude' => $baseLng + $randomOffset(),
-                'created_at' => $now,
-                'updated_at' => $now
-            ],
-
-            // 🔹 Project 4
-            [
-                'title' => 'Hurricane Warning Issued',
-                'description' => 'Hurricane alert issued for coastal areas',
-                'project_id' => 4,
-                'latitude' => $baseLat + $randomOffset(),
-                'longitude' => $baseLng + $randomOffset(),
-                'created_at' => $now,
-                'updated_at' => $now
-            ],
-            [
-                'title' => 'Shelters Activated',
-                'description' => 'Emergency shelters opened for evacuees',
-                'project_id' => 4,
-                'latitude' => $baseLat + $randomOffset(),
-                'longitude' => $baseLng + $randomOffset(),
-                'created_at' => $now,
-                'updated_at' => $now
-            ],
-        ]);
-
-        // ----------------------------------------------
-        // Bulk generate 50 random incidents per project
-        // ----------------------------------------------
-        $projects = DB::table('projects')->pluck('id')->toArray();
-
-        if (empty($projects)) {
-            echo "⚠️ No projects found. Seeder skipped.\n";
-            return;
-        }
-
-        $baseTitles = [
-            'Fire outbreak near sector',
-            'Gas leak detected in zone',
-            'Power outage reported at block',
-            'Bridge under structural watch',
-            'Flood warning for low area',
-            'Evacuation advisory issued',
-            'Hurricane alert sounding',
-            'Aftershock detected at region',
-            'Chemical spill incident',
-            'Emergency medical aid required',
-            'Small explosion in facility',
-            'Security breach alert',
-            'Road blockage due to debris',
-            'Heatwave stress alert',
-            'Storm damage reported',
-            'Transformer malfunction event',
+        // Cities + base coordinates
+        $cities = [
+            "California" => [38.63135041885934, -121.0858651423302],
+            "Boston"     => [42.16671495801193, -71.22049727464025],
+            "Chicago"    => [41.873082051552025, -87.6586204323278],
+            "Houston"    => [29.6331478, -95.7010443],
+            "Ohio"       => [39.42157675029737, -84.47636732023595],
         ];
 
-        $baseDescriptions = [
-            'Team deployed for assessment.',
-            'Public notified and precautions issued.',
-            'Minor disruption but under control.',
-            'Authorities currently investigating.',
-            'Evacuation measures activated.',
-            'Monitoring the situation closely.',
-            'Response units mobilized.',
-            'Impact minimal, no casualties reported.',
-            'Situation stable, investigation ongoing.',
-            'On-site team providing support.',
+        $titles = [
+            "Fire outbreak near sector",
+            "Gas leak detected in zone",
+            "Power outage reported",
+            "Flood warning issued",
+            "Security breach alert",
         ];
 
-        foreach ($projects as $projectId) {
-            $records = [];
+        $descs = [
+            "Team deployed for assessment.",
+            "Public notified with precaution advisory.",
+            "Minor disruption but under control.",
+            "Authorities currently investigating.",
+            "Situation stable, investigation ongoing.",
+        ];
 
-            for ($i = 1; $i <= 50; $i++) {
-                $records[] = [
-                    'title'       => $baseTitles[array_rand($baseTitles)] . " #" . rand(100, 999),
-                    'description' => $baseDescriptions[array_rand($baseDescriptions)],
-                    'project_id'  => $projectId,
-                    'latitude'    => $baseLat + $randomOffset(),
-                    'longitude'   => $baseLng + $randomOffset(),
-                    'created_at'  => $now->copy()->subMinutes(rand(1, 5000)),
-                    'updated_at'  => $now,
-                ];
+        // ⭐ GET ALL PROJECTS (internal id + external projectid)
+        $projects = DB::table('projects')->get();
+
+        foreach ($projects as $project) {
+
+            $internalId = $project->id;           // ⭐ internal FK id → 1,2,3,4
+            $externalId = $project->projectid;    // ⭐ external projectid → 101–104
+
+            echo "➡ Seeding incidents for ProjectID: {$externalId} (Internal ID: {$internalId})\n";
+
+            foreach ($cities as $city => $coords) {
+
+                [$lat, $lng] = $coords;
+
+                for ($i = 1; $i <= 5; $i++) {
+
+                    $latOffset = (mt_rand(-250, 250)) / 1000;
+                    $lngOffset = (mt_rand(-250, 250)) / 1000;
+
+                    DB::table('incidents')->insert([
+                        'title'       => $titles[array_rand($titles)] . " #" . rand(100, 999),
+                        'description' => $descs[array_rand($descs)],
+
+                        // ⭐ FIXED: USE INTERNAL ID (respects foreign key)
+                        'project_id'  => $internalId,
+
+                        'city'        => $city,
+                        'latitude'    => $lat + $latOffset,
+                        'longitude'   => $lng + $lngOffset,
+
+                        'created_at'  => $now,
+                        'updated_at'  => $now,
+                    ]);
+                }
             }
-
-            DB::table('incidents')->insert($records);
-
-            echo "✔ Inserted 50 incidents with coordinates for Project ID: $projectId\n";
         }
+
+        echo "\n✅ IncidentSeeder Completed Successfully\n";
     }
 }
