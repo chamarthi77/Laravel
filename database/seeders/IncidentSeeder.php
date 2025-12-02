@@ -4,7 +4,6 @@ namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Str;
 
 class IncidentSeeder extends Seeder
 {
@@ -12,66 +11,100 @@ class IncidentSeeder extends Seeder
     {
         $now = now();
 
-        // Get all existing project IDs
-        $projects = DB::table('projects')->pluck('id')->toArray();
+        // -----------------------------------------
+        // Cities + base coordinates
+        // -----------------------------------------
+        $cities = [
+            "California" => [38.63135041885934, -121.0858651423302],
+            "Boston"     => [42.16671495801193, -71.22049727464025],
+            "Chicago"    => [41.873082051552025, -87.6586204323278],
+            "Houston"    => [29.6331478, -95.7010443],
+            "Ohio"       => [39.42157675029737, -84.47636732023595],
+        ];
 
-        if (empty($projects)) {
-            echo "⚠️ No projects found. Seeder skipped.\n";
+        // -----------------------------------------
+        // Merge of YOUR titles + MAIN repo titles
+        // -----------------------------------------
+        $titles = [
+            "Fire outbreak near sector",
+            "Gas leak detected in zone",
+            "Power outage reported",
+            "Flood warning issued",
+            "Security breach alert",
+            "Bridge under structural watch",
+            "Evacuation advisory issued",
+            "Hurricane alert sounding",
+            "Aftershock detected at region",
+            "Chemical spill incident",
+            "Emergency medical aid required",
+            "Small explosion in facility",
+            "Road blockage due to debris",
+            "Storm damage reported",
+            "Transformer malfunction event",
+        ];
+
+        // -----------------------------------------
+        // Merge of YOUR descriptions + MAIN ones
+        // -----------------------------------------
+        $descs = [
+            "Team deployed for assessment.",
+            "Public notified with precaution advisory.",
+            "Minor disruption but under control.",
+            "Authorities currently investigating.",
+            "Situation stable, investigation ongoing.",
+            "Evacuation measures activated.",
+            "Monitoring the situation closely.",
+            "Response units mobilized.",
+            "Impact minimal, no casualties reported.",
+            "On-site team providing support.",
+        ];
+
+        // -----------------------------------------
+        // GET all projects (internal ID + external ID)
+        // -----------------------------------------
+        $projects = DB::table('projects')->get();
+
+        if ($projects->isEmpty()) {
+            echo "⚠️ No projects found — skipping seeder.\n";
             return;
         }
 
-        $baseTitles = [
-            'Fire outbreak near sector',
-            'Gas leak detected in zone',
-            'Power outage reported at block',
-            'Bridge under structural watch',
-            'Flood warning for low area',
-            'Evacuation advisory issued',
-            'Hurricane alert sounding',
-            'Aftershock detected at region',
-            'Chemical spill incident',
-            'Emergency medical aid required',
-            'Small explosion in facility',
-            'Security breach alert',
-            'Road blockage due to debris',
-            'Heatwave stress alert',
-            'Storm damage reported',
-            'Transformer malfunction event',
-        ];
+        foreach ($projects as $project) {
 
-        $baseDescriptions = [
-            'Team deployed for assessment.',
-            'Public notified and precautions issued.',
-            'Minor disruption but under control.',
-            'Authorities currently investigating.',
-            'Evacuation measures activated.',
-            'Monitoring the situation closely.',
-            'Response units mobilized.',
-            'Impact minimal, no casualties reported.',
-            'Situation stable, investigation ongoing.',
-            'On-site team providing support.',
-        ];
+            $internalId = $project->id;         // FK safe
+            $externalId = $project->projectid;  // 101–104
 
-        foreach ($projects as $projectId) {
-            $records = [];
+            echo "➡ Seeding 25 incidents for ProjectID: {$externalId} (Internal ID: {$internalId})\n";
 
-            // Generate 50 incidents per project
-            for ($i = 1; $i <= 50; $i++) {
-                $title = $baseTitles[array_rand($baseTitles)] . " #" . rand(100, 999);
-                $description = $baseDescriptions[array_rand($baseDescriptions)];
+            foreach ($cities as $city => $coords) {
 
-                $records[] = [
-                    'title'       => $title,
-                    'description' => $description,
-                    'project_id'  => $projectId,
-                    'created_at'  => $now->copy()->subMinutes(rand(1, 5000)),
-                    'updated_at'  => $now,
-                ];
+                [$lat, $lng] = $coords;
+
+                // 5 incidents per city
+                for ($i = 1; $i <= 5; $i++) {
+
+                    $latOffset = mt_rand(-250, 250) / 1000;
+                    $lngOffset = mt_rand(-250, 250) / 1000;
+
+                    DB::table('incidents')->insert([
+                        'title'       => $titles[array_rand($titles)] . " #" . rand(100, 999),
+                        'description' => $descs[array_rand($descs)],
+
+                        // INTERNAL ID → FK safe
+                        'project_id'  => $internalId,
+
+                        'city'        => $city,
+                        'latitude'    => $lat + $latOffset,
+                        'longitude'   => $lng + $lngOffset,
+
+                        // Random historic timestamp (from main repo version)
+                        'created_at'  => $now->copy()->subMinutes(rand(10, 5000)),
+                        'updated_at'  => $now,
+                    ]);
+                }
             }
-
-            DB::table('incidents')->insert($records);
-
-            echo "✔ Inserted 50 incidents for Project ID: $projectId\n";
         }
+
+        echo "\n✅ IncidentSeeder completed successfully.\n";
     }
 }

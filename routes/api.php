@@ -5,12 +5,12 @@ use App\Http\Controllers\HealthController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Admin\PermissionController;
 use App\Http\Controllers\Api\ProjectController;
+use App\Http\Controllers\Api\IncidentIOIController;
 use App\Http\Controllers\Api\IncidentController;
-
 
 Route::get('/projects', [ProjectController::class, 'index']);
 Route::get('/incidents', [IncidentController::class, 'index']);
-
+Route::get('/ioi/incidents', [IncidentIOIController::class, 'index']);
 
 // ---------------------------------------------------------
 // Health check
