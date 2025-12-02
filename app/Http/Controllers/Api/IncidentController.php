@@ -10,63 +10,79 @@ class IncidentController extends Controller
 {
     public function index(Request $request)
     {
-        $projectId = $request->query('project_id');
-        $page      = (int) $request->query('page', 1);
-        $limit     = (int) $request->query('limit', 10);
+        // ----------------------------------------------
+        // 1. Read EXTERNAL project_id (example: 101,102)
+        // ----------------------------------------------
+        $externalProjectId = $request->query('project_id');
+        $page = (int) $request->query('page', 1);
+        $limit = (int) $request->query('limit', 10);
 
-        if (!$projectId) {
+        if (!$externalProjectId) {
             return response()->json([
-                'status' => 'error',
+                'status'  => 'error',
                 'message' => 'Missing project_id'
             ], 400);
         }
 
-        // Resolve internal/external project id
+        // ------------------------------------------------------
+        // 2. Lookup PROJECT using EXTERNAL projectid (IOI style)
+        //    DO NOT use internal id here
+        // ------------------------------------------------------
         $project = DB::table('projects')
-            ->where('id', $projectId)
-            ->orWhere('projectid', $projectId)
+            ->where('projectid', $externalProjectId)  // external!
             ->first();
 
         if (!$project) {
             return response()->json([
-                'status' => 'error',
+                'status'  => 'error',
                 'message' => 'Project not found'
             ], 404);
         }
 
-        // Base query
-$query = DB::table('incidents')
-    ->select([
-        'id',
-        'title as name',
-        'description',
-        'project_id',
-        DB::raw('created_at as created'),
-        DB::raw('"System" as createdBy'),
-        DB::raw('0 as distance'),
-    ])
-    ->where('project_id', $project->id)
-    ->orderBy('id', 'asc');
+        // internal id used inside incidents table
+        $internalId = $project->id;
 
+        // ------------------------------------------------------
+        // 3. Base incident query
+        // ------------------------------------------------------
+        $query = DB::table('incidents')
+            ->select([
+                'id',
+                'title as name',
+                'description',
+                DB::raw('city as city'),
+                DB::raw('latitude as latitude'),
+                DB::raw('longitude as longitude'),
+                DB::raw('created_at as created'),
+                DB::raw('"System" as createdBy'),
+                DB::raw('0 as distance'),
+            ])
+            ->where('project_id', $internalId)
+            ->orderBy('id', 'asc');
 
-
-        // Total count
+        // ------------------------------------------------------
+        // 4. Pagination math
+        // ------------------------------------------------------
         $total = $query->count();
-
-        // Pagination math
         $offset = ($page - 1) * $limit;
 
-        // Fetch paginated data
-        $records = $query->offset($offset)->limit($limit)->get();
+        $records = $query
+            ->offset($offset)
+            ->limit($limit)
+            ->get();
 
+        // ------------------------------------------------------
+        // 5. Response
+        // ------------------------------------------------------
         return response()->json([
-            'status'     => 'success',
-            'project_id' => $project->id,
-            'page'       => $page,
-            'limit'      => $limit,
-            'total'      => $total,
-            'last_page'  => ceil($total / $limit),
-            'data'       => $records,
-        ]);
+            'status'          => 'success',
+            'external_project_id' => $externalProjectId,
+            'internal_project_id' => $internalId,
+            'page'            => $page,
+            'limit'           => $limit,
+            'total'           => $total,
+            'last_page'       => ceil($total / $limit),
+            'data'            => $records,
+        ], 200);
     }
 }

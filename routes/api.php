@@ -9,7 +9,7 @@ use App\Http\Controllers\Api\IncidentIOIController;
 use App\Http\Controllers\Api\IncidentController;
 
 Route::get('/projects', [ProjectController::class, 'index']);
-//Route::get('/incidents', [IncidentController::class, 'index']);
+Route::get('/incidents', [IncidentController::class, 'index']);
 Route::get('/ioi/incidents', [IncidentIOIController::class, 'index']);
 
 // ---------------------------------------------------------
