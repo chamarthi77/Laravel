@@ -49,11 +49,14 @@ class IncidentController extends Controller
             ->select([
                 'id',
                 'title as name',
+                'title',
                 'description',
+                'status',
                 DB::raw('city as city'),
                 DB::raw('latitude as latitude'),
                 DB::raw('longitude as longitude'),
                 DB::raw('created_at as created'),
+                'created_at',
                 DB::raw('"System" as createdBy'),
                 DB::raw('0 as distance'),
             ])

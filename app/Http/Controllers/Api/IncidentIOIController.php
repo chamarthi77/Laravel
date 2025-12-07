@@ -65,6 +65,7 @@ class IncidentIOIController extends Controller
                     'id'          => $item->id,
                     'title'       => $item->title,
                     'description' => $item->description,
+                    'status'      => $item->status ?? 'active',
                     'city'        => $item->city,
 
                     'lat'         => (float) $item->latitude,

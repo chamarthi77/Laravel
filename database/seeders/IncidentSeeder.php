@@ -60,6 +60,17 @@ class IncidentSeeder extends Seeder
         ];
 
         // -----------------------------------------
+        // Status values with weighted distribution
+        // 'active' = 40%, 'pending' = 30%, 'resolved' = 20%, 'closed' = 10%
+        // -----------------------------------------
+        $statuses = [
+            'active', 'active', 'active', 'active',     // 40%
+            'pending', 'pending', 'pending',            // 30%
+            'resolved', 'resolved',                     // 20%
+            'closed',                                   // 10%
+        ];
+
+        // -----------------------------------------
         // GET all projects (internal ID + external ID)
         // -----------------------------------------
         $projects = DB::table('projects')->get();
@@ -89,6 +100,9 @@ class IncidentSeeder extends Seeder
                     DB::table('incidents')->insert([
                         'title'       => $titles[array_rand($titles)] . " #" . rand(100, 999),
                         'description' => $descs[array_rand($descs)],
+                        
+                        // Status - randomly assigned with weighted distribution
+                        'status'      => $statuses[array_rand($statuses)],
 
                         // INTERNAL ID → FK safe
                         'project_id'  => $internalId,
