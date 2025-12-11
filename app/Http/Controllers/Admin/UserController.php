@@ -23,11 +23,12 @@ class UserController extends Controller
 
     /**
      * Create new user manually OR from Flutter registration
-     * Accepts latitude, longitude, address
+     * (No incident creation)
      */
     public function store(Request $request)
     {
         \Log::info("REGISTER API HIT", $request->all());
+
         $data = $request->validate([
             'firebase_uid'   => ['required', 'string', 'max:255', 'unique:users,firebase_uid'],
             'email'          => ['required', 'email', 'max:255', 'unique:users,email'],
@@ -35,16 +36,17 @@ class UserController extends Controller
             'role'           => ['sometimes', 'string', 'max:50'],
             'email_verified' => ['sometimes', 'boolean'],
 
-            // New fields
+            // Optional location fields
             'latitude'       => ['nullable', 'numeric'],
             'longitude'      => ['nullable', 'numeric'],
             'address'        => ['nullable', 'string', 'max:255'],
         ]);
 
         DB::beginTransaction();
+
         try {
 
-            // 1️⃣ Save user including location
+            // ✅ CREATE USER ONLY (NO INCIDENT)
             $user = User::create([
                 'firebase_uid'   => $data['firebase_uid'],
                 'email'          => $data['email'],
@@ -52,25 +54,11 @@ class UserController extends Controller
                 'role'           => $data['role'] ?? 'USER',
                 'email_verified' => $data['email_verified'] ?? false,
 
-                // Location fields
+                // Optional location
                 'latitude'       => $data['latitude'] ?? null,
                 'longitude'      => $data['longitude'] ?? null,
                 'address'        => $data['address'] ?? null,
             ]);
-
-            // 2️⃣ Optional — Create incident automatically when location exists
-            if (isset($data['latitude']) && isset($data['longitude'])) {
-                DB::table('incidents')->insert([
-                    'title'       => 'New User Registered',
-                    'description' => "{$data['name']} created an account",
-                    'latitude'    => $data['latitude'],
-                    'longitude'   => $data['longitude'],
-                    'location'    => $data['address'] ?? null,
-                    'project_id'  => 1, // Default project
-                    'created_at'  => now(),
-                    'updated_at'  => now(),
-                ]);
-            }
 
             DB::commit();
 
@@ -80,7 +68,9 @@ class UserController extends Controller
             ], 201);
 
         } catch (\Throwable $e) {
+
             DB::rollBack();
+
             return response()->json([
                 'message' => 'Unable to create user',
                 'error'   => $e->getMessage(),
@@ -98,7 +88,7 @@ class UserController extends Controller
 
     /**
      * Update or auto-create user by Firebase UID
-     * Accepts latitude, longitude, address
+     * (No incident creation)
      */
     public function update(Request $request, $uid)
     {
@@ -113,7 +103,7 @@ class UserController extends Controller
                 'role'           => 'USER',
                 'email_verified' => $request->boolean('email_verified', false),
 
-                // Location fields
+                // Optional location
                 'latitude'       => $request->input('latitude'),
                 'longitude'      => $request->input('longitude'),
                 'address'        => $request->input('address'),
@@ -121,18 +111,19 @@ class UserController extends Controller
         }
 
         $data = $request->validate([
-            'email'          => ['sometimes', 'email', 'max:255', Rule::unique('users','email')->ignore($user->id)],
+            'email'          => ['sometimes', 'email', 'max:255', Rule::unique('users', 'email')->ignore($user->id)],
             'name'           => ['sometimes', 'string', 'max:255'],
             'role'           => ['sometimes', 'string', 'max:50'],
             'email_verified' => ['sometimes', 'boolean'],
 
-            // New fields
+            // Optional location
             'latitude'       => ['sometimes', 'numeric'],
             'longitude'      => ['sometimes', 'numeric'],
             'address'        => ['sometimes', 'string', 'max:255'],
         ]);
 
         DB::beginTransaction();
+
         try {
             $user->update($data);
 
@@ -144,7 +135,9 @@ class UserController extends Controller
             ], 200);
 
         } catch (\Throwable $e) {
+
             DB::rollBack();
+
             return response()->json([
                 'message' => 'Unable to update user',
                 'error'   => $e->getMessage(),
@@ -178,14 +171,14 @@ class UserController extends Controller
 
     /**
      * Update/auto-create user by Firebase UID
-     * Accepts latitude, longitude, address
+     * (No incident creation)
      */
     public function updateByFirebase(Request $request, $uid)
     {
         $user = User::where('firebase_uid', $uid)->first();
 
         if (!$user) {
-            // FIRST TIME LOGIN → AUTO-CREATE USER + LOCATION
+            // FIRST TIME LOGIN → AUTO CREATE USER
             $user = User::create([
                 'firebase_uid'   => $uid,
                 'email'          => $request->input('email', ''),
@@ -193,7 +186,7 @@ class UserController extends Controller
                 'role'           => 'USER',
                 'email_verified' => $request->boolean('email_verified', false),
 
-                // NEW LOCATION FIELDS
+                // Optional location
                 'latitude'       => $request->input('latitude'),
                 'longitude'      => $request->input('longitude'),
                 'address'        => $request->input('address'),
@@ -231,6 +224,7 @@ class UserController extends Controller
         }
 
         $user->delete();
+
         return response()->json(['deleted' => true], 200);
     }
 }
