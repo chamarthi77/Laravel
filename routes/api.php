@@ -7,6 +7,8 @@ use App\Http\Controllers\Admin\PermissionController;
 use App\Http\Controllers\Api\ProjectController;
 use App\Http\Controllers\Api\IncidentIOIController;
 use App\Http\Controllers\Api\IncidentController;
+use App\Http\Controllers\Admin\AdminIncidentController;
+
 
 Route::get('/projects', [ProjectController::class, 'index']);
 Route::get('/incidents', [IncidentController::class, 'index']);
@@ -26,6 +28,20 @@ Route::post('/admin/users', [UserController::class, 'store']);
 // ---------------------------------------------------------
 // Admin routes (protected by Firebase + RBAC)
 // ---------------------------------------------------------
+
+//test
+Route::middleware(['firebase.auth', 'role:SUPER_ADMIN'])
+    ->get('/admin/role-test', fn () => response()->json(['ok' => true]));
+
+
+Route::prefix('admin')
+    ->middleware(['firebase.auth', 'role:SUPER_ADMIN'])
+    ->group(function () {
+        Route::post('/incidents', [AdminIncidentController::class, 'store']);
+        Route::delete('/incidents/{incident}', [AdminIncidentController::class, 'destroy']);
+    });
+
+
 Route::prefix('admin')
     ->middleware(['firebase.auth'])
     ->group(function () {

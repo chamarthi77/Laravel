@@ -8,43 +8,81 @@ use Illuminate\Support\Facades\DB;
 
 class IncidentController extends Controller
 {
+    // ======================================================
+    // CREATE INCIDENT (DB project_id ONLY)
+    // ======================================================
+    public function store(Request $request)
+    {
+        $data = $request->validate([
+            'project_id'   => 'required|integer|exists:projects,id', // ✅ DB ID
+            'org_id'       => 'required|integer',
+            'community_id' => 'required|integer',
+            'title'        => 'required|string|max:255',
+            'description'  => 'nullable|string',
+            'status'       => 'required|in:active,pending,resolved,closed',
+            'city'         => 'required|string|max:100',
+            'latitude'     => 'required|numeric',
+            'longitude'    => 'required|numeric',
+        ]);
+
+        $incidentId = DB::table('incidents')->insertGetId([
+            'project_id'   => $data['project_id'], // ✅ DIRECT DB ID
+            'org_id'       => $data['org_id'],
+            'community_id' => $data['community_id'],
+            'title'        => $data['title'],
+            'description'  => $data['description'],
+            'status'       => $data['status'],
+            'city'         => $data['city'],
+            'latitude'     => $data['latitude'],
+            'longitude'    => $data['longitude'],
+            'created_at'   => now(),
+            'updated_at'   => now(),
+        ]);
+
+        return response()->json([
+            'status' => 'success',
+            'id'     => $incidentId,
+        ], 201);
+    }
+
+    // ======================================================
+    // DELETE INCIDENT
+    // ======================================================
+    public function destroy($id)
+    {
+        DB::table('incidents')->where('id', $id)->delete();
+
+        return response()->json([
+            'ok' => true,
+            'deleted_id' => $id,
+        ]);
+    }
+
+    // ======================================================
+    // LIST INCIDENTS (DB project_id ONLY)
+    // ======================================================
     public function index(Request $request)
     {
-        // ----------------------------------------------
-        // 1. Read EXTERNAL project_id (example: 101,102)
-        // ----------------------------------------------
-        $externalProjectId = $request->query('project_id');
-        $page = (int) $request->query('page', 1);
+        $projectId = (int) $request->query('project_id'); // ✅ DB ID
+        $page  = (int) $request->query('page', 1);
         $limit = (int) $request->query('limit', 10);
 
-        if (!$externalProjectId) {
+        if (!$projectId) {
             return response()->json([
-                'status'  => 'error',
-                'message' => 'Missing project_id'
+                'status' => 'error',
+                'message' => 'Missing project_id',
             ], 400);
         }
 
-        // ------------------------------------------------------
-        // 2. Lookup PROJECT using EXTERNAL projectid (IOI style)
-        //    DO NOT use internal id here
-        // ------------------------------------------------------
-        $project = DB::table('projects')
-            ->where('projectid', $externalProjectId)  // external!
-            ->first();
-
-        if (!$project) {
+        // Validate project exists (DB id)
+        if (!DB::table('projects')->where('id', $projectId)->exists()) {
             return response()->json([
-                'status'  => 'error',
-                'message' => 'Project not found'
+                'status' => 'error',
+                'message' => 'Project not found',
             ], 404);
         }
 
-        // internal id used inside incidents table
-        $internalId = $project->id;
-
-        // ------------------------------------------------------
-        // 3. Base incident query
-        // ------------------------------------------------------
+        // Base query
         $query = DB::table('incidents')
             ->select([
                 'id',
@@ -52,21 +90,18 @@ class IncidentController extends Controller
                 'title',
                 'description',
                 'status',
-                DB::raw('city as city'),
-                DB::raw('latitude as latitude'),
-                DB::raw('longitude as longitude'),
-                DB::raw('created_at as created'),
+                'city',
+                'latitude',
+                'longitude',
+                'created_at as created',
                 'created_at',
                 DB::raw('"System" as createdBy'),
                 DB::raw('0 as distance'),
             ])
-            ->where('project_id', $internalId)
+            ->where('project_id', $projectId)
             ->orderBy('id', 'asc');
 
-        // ------------------------------------------------------
-        // 4. Pagination math
-        // ------------------------------------------------------
-        $total = $query->count();
+        $total  = $query->count();
         $offset = ($page - 1) * $limit;
 
         $records = $query
@@ -74,18 +109,14 @@ class IncidentController extends Controller
             ->limit($limit)
             ->get();
 
-        // ------------------------------------------------------
-        // 5. Response
-        // ------------------------------------------------------
         return response()->json([
-            'status'          => 'success',
-            'external_project_id' => $externalProjectId,
-            'internal_project_id' => $internalId,
-            'page'            => $page,
-            'limit'           => $limit,
-            'total'           => $total,
-            'last_page'       => ceil($total / $limit),
-            'data'            => $records,
-        ], 200);
+            'status'    => 'success',
+            'project_id'=> $projectId,
+            'page'      => $page,
+            'limit'     => $limit,
+            'total'     => $total,
+            'last_page' => ceil($total / $limit),
+            'data'      => $records,
+        ]);
     }
 }

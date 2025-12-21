@@ -6,22 +6,11 @@ use Illuminate\Foundation\Http\Kernel as HttpKernel;
 
 class Kernel extends HttpKernel
 {
-
-   
-protected $routeMiddleware = [
-   
-
-    // ✅ Firebase middleware alias
-    'firebase.auth' => \App\Http\Middleware\VerifyFirebaseToken::class,
-    'firebase.auth' => \App\Http\Middleware\FirebaseAuthMiddleware::class,
-
-
-    // Other custom middleware
-    'role'            => \App\Http\Middleware\EnsureRole::class,
-    'super.admin'     => \App\Http\Middleware\EnsureSuperAdmin::class,
-];
-
-
-
+    /**
+     * Route middleware aliases (Laravel 12)
+     */
+    protected $middlewareAliases = [
+        'firebase.auth' => \App\Http\Middleware\AuthenticateFirebase::class,
+        'role'          => \App\Http\Middleware\RoleMiddleware::class,
+    ];
 }
-
