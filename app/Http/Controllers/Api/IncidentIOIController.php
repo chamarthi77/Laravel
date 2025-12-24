@@ -11,52 +11,43 @@ class IncidentIOIController extends Controller
     public function index(Request $request)
     {
         // ---------------------------------------------------------
-        // 1. Read EXTERNAL project_id (example: 101,102,103,104)
+        // 1. Read INTERNAL DB project_id (1,2,3,4)
         // ---------------------------------------------------------
-        $externalProjectId = $request->query('project_id');
+        $projectId = (int) $request->query('project_id');
 
-        if (!$externalProjectId) {
+        if (!$projectId) {
             return response()->json([
                 'status'  => 'error',
-                'message' => 'project_id is required'
+                'message' => 'project_id is required',
             ], 400);
         }
 
         // ---------------------------------------------------------
-        // 2. Find project using EXTERNAL projectid
-        //    projectid = 101/102/103/104
-        //    id        = 1 / 2 / 3 / 4 (internal)
+        // 2. Validate project exists (DB ID)
         // ---------------------------------------------------------
-        $project = DB::table('projects')
-            ->where('projectid', $externalProjectId)
-            ->first();
-
-        if (!$project) {
+        if (!DB::table('projects')->where('id', $projectId)->exists()) {
             return response()->json([
                 'status'  => 'error',
-                'message' => 'Project not found'
+                'message' => 'Project not found',
             ], 404);
         }
 
-        // ⭐ INTERNAL ID USED IN incidents.project_id
-        $internalId = $project->id;
-
         // ---------------------------------------------------------
-        // 3. Cities used in seeder
+        // 3. Cities (seeded / allowed)
         // ---------------------------------------------------------
         $cities = ["California", "Boston", "Chicago", "Houston", "Ohio"];
 
         $finalIncidents = [];
 
         // ---------------------------------------------------------
-        // 4. Get EXACTLY 5 incidents per city
-        //    For the INTERNAL project_id (1,2,3,4)
+        // 4. Get EXACTLY up to 5 incidents per city
+        //    using INTERNAL DB project_id
         // ---------------------------------------------------------
         foreach ($cities as $city) {
-
             $records = DB::table('incidents')
-                ->where('project_id', $internalId)  // ✔ ALWAYS INTERNAL ID
+                ->where('project_id', $projectId) // ✅ DB ID ONLY
                 ->where('city', $city)
+                ->orderBy('id', 'desc')
                 ->limit(5)
                 ->get();
 
@@ -73,8 +64,8 @@ class IncidentIOIController extends Controller
                     'latitude'    => (float) $item->latitude,
                     'longitude'   => (float) $item->longitude,
 
-                    // Send EXTERNAL id back to Flutter
-                    'project_id'  => $externalProjectId,
+                    // ✅ DB project id
+                    'project_id'  => $projectId,
 
                     'created_at'  => $item->created_at,
                 ];
@@ -87,7 +78,7 @@ class IncidentIOIController extends Controller
         return response()->json([
             'status' => 'success',
             'count'  => count($finalIncidents),
-            'data'   => $finalIncidents
+            'data'   => $finalIncidents,
         ]);
     }
 }
